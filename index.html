@@ -28,8 +28,8 @@ input:focus-visible,button:focus-visible{outline:3px solid var(--lime);outline-o
 .hero h2{margin:0;font-size:22px;font-weight:800}
 .mood{color:var(--mute);margin:2px 0 4px}
 svg.stage{width:100%;max-width:420px;height:auto;display:block;margin:0 auto}
-#fig{transform-origin:200px 345px;transition:transform .9s cubic-bezier(.3,1.5,.5,1)}
-#prog{transition:stroke-dashoffset .9s ease,stroke .4s}
+#fig{transform-origin:200px 345px}
+#prog{transition:stroke .4s}
 .pills{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:6px}
 .pill{border-radius:16px;padding:10px 18px;background:var(--bg);min-width:130px}
 .pill b{display:block;font-size:28px;font-weight:800;line-height:1.1}
@@ -125,8 +125,9 @@ svg.stage{width:100%;max-width:420px;height:auto;display:block;margin:0 auto}
 
 <div class="stats" id="stats"></div>
 
-<div class="two solo" id="two">
+<div class="two" id="two">
   <section class="card sec"><h3>Last 7 days</h3><div class="bars" id="bars"></div></section>
+  <section class="card sec"><h3>Meal history</h3><div class="list" id="list"></div></section>
   </div>
 </div>
 
@@ -135,7 +136,7 @@ svg.stage{width:100%;max-width:420px;height:auto;display:block;margin:0 auto}
 const CONFIG={
   name:'David',
   goal:2000,                                // daily calorie goal
-  csvUrl:'https://docs.google.com/spreadsheets/d/e/2PACX-1vQo6KM3GmWnuKpDxqdtNeaLM2aZyxn6rR9GFHXU0_U_Ung_QcJfN9VfEI16QoiP__mCIuoNjtR62Dmi/pub?gid=1818132855&single=true&output=csv', // Google Sheet > File > Share > Publish to web > CSV
+  csvUrl:'https://docs.google.com/spreadsheets/d/e/2PACX-1vQo6KM3GmWnuKpDxqdtNeaLM2aZyxn6rR9GFHXU0_U_Ung_QcJfN9VfEI16QoiP__mCIuoNjtR62Dmi/pub?gid=695696327&single=true&output=csv', // Google Sheet > File > Share > Publish to web > CSV
   refreshMinutes:5
 };
 let S={name:CONFIG.name,goal:CONFIG.goal,meals:[]};
@@ -149,6 +150,44 @@ const num=n=>Math.round(n).toLocaleString();
 const sum=(a,k)=>a.reduce((s,m)=>s+m[k],0);
 const nice=d=>{const [y,m,day]=d.split('-').map(Number);return new Date(y,m-1,day).toLocaleDateString(undefined,{month:'short',day:'numeric'})};
 
+// ---- Tween engine: David's animation ----
+const RM=matchMedia('(prefers-reduced-motion:reduce)').matches;
+const ease={
+  outCubic:t=>1-Math.pow(1-t,3),
+  outElastic:t=>t===0||t===1?t:Math.pow(2,-9*t)*Math.sin((t*10-0.75)*(2*Math.PI/3))+1
+};
+const cur={g:0,ring:0,cal:0,spend:0},raf={};
+let breath=0,eyeBase=7,nextBlink=2500,blinkStart=-1,mraf,mc=[184,170,200,186,216,170];
+function apply(){
+  const sx=(0.72+0.42*cur.g)*(1+0.012*breath),sy=(0.88+0.16*cur.g)*(1-0.02*breath);
+  $('fig').style.transform=`scale(${sx.toFixed(3)},${sy.toFixed(3)})`;
+  $('prog').style.strokeDashoffset=1055.6*(1-cur.ring);
+  $('tCal').textContent=num(cur.cal);$('tSpend').textContent=money(cur.spend);
+}
+function tweenTo(k,to,ms,fn){
+  cancelAnimationFrame(raf[k]);const from=cur[k],t0=performance.now(),d=RM?1:ms;
+  (function step(now){const p=Math.min((now-t0)/d,1);cur[k]=from+(to-from)*fn(p);apply();if(p<1)raf[k]=requestAnimationFrame(step)})(t0);
+}
+const MN=[[184,170,200,186,216,170],[186,172,200,180,214,172],[186,176,200,176,214,176],[184,180,200,166,216,180]];
+function moveMouth(i){
+  cancelAnimationFrame(mraf);const f=mc.slice(),to=MN[i],t0=performance.now();
+  (function s(now){const p=Math.min((now-t0)/(RM?1:500),1),e=ease.outCubic(p);
+    mc=f.map((v,k)=>v+(to[k]-v)*e);
+    $('mouth').setAttribute('d',`M${mc[0]} ${mc[1]} Q${mc[2]} ${mc[3]} ${mc[4]} ${mc[5]}`);
+    if(p<1)mraf=requestAnimationFrame(s)})(t0);
+}
+function idle(t){
+  let k=1;
+  if(!RM){
+    breath=Math.sin(t/650);
+    if(blinkStart<0&&t>nextBlink)blinkStart=t;
+    if(blinkStart>=0){const p=(t-blinkStart)/170;if(p>=1){blinkStart=-1;nextBlink=t+2500+Math.random()*3000}else k=1-0.9*Math.sin(Math.PI*p)}
+  }
+  const ry=(eyeBase*k).toFixed(2);$('eL').setAttribute('ry',ry);$('eR').setAttribute('ry',ry);
+  apply();requestAnimationFrame(idle);
+}
+requestAnimationFrame(idle);
+
 const MOUTH=['M184 170 Q200 186 216 170','M186 172 Q200 180 214 172','M186 176 L214 176','M184 180 Q200 166 216 180'];
 function mood(r){
   if(r<.05)return['Hungry, but dignified.',0];
@@ -159,30 +198,34 @@ function mood(r){
   return['Full food coma.',3];
 }
 
+function groupOrders(list){const g={};
+  list.forEach(m=>{const k=m.date+'|'+m.spot.toLowerCase()+'|'+(m.order||'');
+    const o=g[k]=g[k]||{id:m.id,date:m.date,spot:m.spot,items:[],cal:0,price:0};
+    o.items.push(m);o.cal+=m.cal;o.price+=m.price;o.id=Math.max(o.id,m.id)});
+  return Object.values(g)}
 function render(){
   const t=today(),goal=S.goal,all=S.meals;
   const td=all.filter(m=>m.date===t),cal=sum(td,'cal'),sp=sum(td,'price'),r=cal/goal;
   $('hName').textContent=S.name;
   const [mt,mi]=mood(r);$('mood').textContent=mt;
-  const g=Math.min(r,2.5);
-  $('fig').style.transform=`scale(${(0.72+0.42*g).toFixed(3)},${(0.88+0.16*g).toFixed(3)})`;
-  $('prog').style.strokeDashoffset=1055.6*(1-Math.min(r,1));
+  tweenTo('g',Math.min(r,2.5),1300,ease.outElastic);tweenTo('ring',Math.min(r,1),900,ease.outCubic);
   $('prog').style.stroke=r>1.15?'#ff4d4d':r>.9?'#ffb703':'#b6ff00';
-  $('mouth').setAttribute('d',MOUTH[mi]);
-  const sleepy=r>=1.6;$('eL').setAttribute('ry',sleepy?2:7);$('eR').setAttribute('ry',sleepy?2:7);
-  $('tCal').textContent=num(cal);$('tGoal').textContent=`of ${num(goal)} calories today`;$('tSpend').textContent=money(sp);
+  moveMouth(mi);
+  eyeBase=r>=1.6?2:7;
+  tweenTo('cal',cal,900,ease.outCubic);tweenTo('spend',sp,900,ease.outCubic);$('tGoal').textContent=`of ${num(goal)} calories today`;
 
   const days=[...new Set(all.map(m=>m.date))],spots={};
-  all.forEach(m=>{spots[m.spot]=(spots[m.spot]||0)+1});
+  const orders=groupOrders(all);
+  orders.forEach(o=>{spots[o.spot]=(spots[o.spot]||0)+1});
   const fave=Object.entries(spots).sort((a,b)=>b[1]-a[1])[0];
   const tc=sum(all,'cal'),ts=sum(all,'price');
   $('stats').innerHTML=`
    <div class="stat big"><b>${num(tc)}</b><span>All-time calories</span></div>
    <div class="stat yel"><b>${money(ts)}</b><span>All-time fast food spend</span></div>
-   <div class="stat"><b>${all.length}</b><span>Meals logged${days.length?` over ${days.length} day${days.length>1?'s':''}`:''}</span></div>
+   <div class="stat"><b>${orders.length}</b><span>Orders logged (${all.length} items)${days.length?` over ${days.length} day${days.length>1?'s':''}`:''}</span></div>
    <div class="stat"><b>${days.length?num(tc/days.length):0}</b><span>Average calories per day</span></div>
    <div class="stat"><b>${days.length?money(ts/days.length):'$0.00'}</b><span>Average spend per day</span></div>
-   <div class="stat"><b>${all.length?money(ts/all.length):'$0.00'}</b><span>Average cost per meal</span></div>
+   <div class="stat"><b>${orders.length?money(ts/orders.length):'$0.00'}</b><span>Average cost per order</span></div>
    <div class="stat"><b>${fave?esc(fave[0]):'None yet'}</b><span>${fave?`Favorite spot (${fave[1]} visits)`:'Favorite spot'}</span></div>
    <div class="stat"><b>${days.length?num(Math.max(...days.map(d=>sum(all.filter(m=>m.date===d),'cal')))):0}</b><span>Biggest day (calories)</span></div>`;
 
@@ -191,6 +234,8 @@ function render(){
   $('bars').innerHTML=`<div class="goal" style="bottom:calc(${(goal/mx*100).toFixed(1)}% * .78 + 22px)"><span>goal</span></div>`+
     wk.map(w=>`<div class="bar"><em>${w.c?num(w.c):''}</em><i class="${w.c>goal?'over':''}" style="height:${(w.c/mx*78).toFixed(1)}%"></i>${w.l}</div>`).join('');
 
+  const L=orders.sort((a,b)=>b.date.localeCompare(a.date)||b.id-a.id);
+  $('list').innerHTML=L.length?L.map(o=>`<div class="row"><div class="t"><b>${esc(o.spot)}${o.items.length>1?` \u00b7 ${o.items.length} items`:''}</b><small>${esc(o.items.map(i=>i.item||'Item').join(', '))} \u00b7 ${nice(o.date)}</small></div><div class="n">${num(o.cal)} cal<small>${money(o.price)}</small></div></div>`).join(''):`<div class="empty">No meals logged yet.</div>`;
 }
 
 function parseCSV(t){const rows=[];let r=[],c='',q=false;
@@ -210,10 +255,14 @@ function fromCSV(text){
   const rows=parseCSV(text).filter(r=>r.some(x=>x.trim()));
   const h=(rows.shift()||[]).map(x=>x.trim().toLowerCase());
   const ix=k=>h.indexOf(k);
-  const [iD,iR,iI,iC,iP]=['date','restaurant','item','calories','price'].map(ix);
-  return rows.map((r,n)=>({id:n,date:normDate(r[iD]),spot:(r[iR]||'').trim()||'Unknown',item:(r[iI]||'').trim(),cal:numv(r[iC]),price:numv(r[iP])})).filter(m=>m.date&&m.cal>0)}
-function sample(){const out=[],spots=[['McDonald\u2019s','Big Mac meal',1090,10.5],['Taco Bell','Crunchwrap combo',1000,10],['Wendy\u2019s','Baconator combo',1500,12.5],['Chick-fil-A','Spicy sandwich meal',1100,11],['Popeyes','Tenders combo',1150,11]];
-  for(let i=0;i<7;i++){const x=new Date();x.setDate(x.getDate()-i);for(let j=0;j<1+i%3;j++){const p=spots[(i+j*2)%5];out.push({id:out.length,date:ds(x),spot:p[0],item:p[1],cal:p[2],price:p[3]})}}
+  const [iD,iR,iI,iC,iP,iO]=['date','restaurant','item','calories','price','order'].map(ix);
+  return rows.map((r,n)=>({id:n,date:normDate(r[iD]),spot:(r[iR]||'').trim()||'Unknown',item:(r[iI]||'').trim(),cal:numv(r[iC]),price:numv(r[iP]),order:iO<0?'':(r[iO]||'').trim()})).filter(m=>m.date&&(m.cal>0||m.price>0))}
+function sample(){const out=[];
+  const menu={'McDonald\u2019s':[['Big Mac',590,5.99],['Large fries',480,3.99],['Coke',200,2.49]],'Taco Bell':[['Crunchwrap Supreme',530,5.49],['Nacho fries',320,2.99],['Baja Blast',230,2.29]],'Wendy\u2019s':[['Baconator',950,7.99],['Chili',250,3.49],['Frosty',350,2.49]],'Chick-fil-A':[['Spicy sandwich',450,5.49],['Waffle fries',420,3.29],['Lemonade',200,2.79]]};
+  const names=Object.keys(menu);
+  for(let i=0;i<7;i++){const x=new Date();x.setDate(x.getDate()-i);
+    for(let j=0;j<1+i%2;j++){const sp=names[(i+j*2)%4],items=menu[sp].slice(0,2+(i+j)%2);
+      items.forEach(it=>out.push({id:out.length,date:ds(x),spot:sp,item:it[0],cal:it[1],price:it[2],order:String(j+1)}))}}
   return out}
 const status=t=>{$('access').textContent=t};
 async function load(){
