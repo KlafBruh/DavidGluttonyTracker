@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Smoke Break Tracker</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💨</text></svg>">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root{color-scheme:dark;--bg:#050505;--card:#110e0b;--ink:#f8f3ee;--mute:#b0a090;--line:#33261a;--lime:#ff7a1a;--red:#ff4d4d;--yel:#ffb703;--grn:#ff7a1a;--ring:#2a1c12;--hero:#0c0a08;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Bricolage Grotesque",system-ui,-apple-system,"Segoe UI",sans-serif;line-height:1.45}
+.wrap{max-width:1080px;margin:0 auto;padding:20px 16px 48px}
+header{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;margin-bottom:18px}
+h1{font-size:clamp(26px,5vw,40px);font-weight:800;letter-spacing:-.02em;margin:0;line-height:1.05}
+h1 span{color:var(--lime)}
+.set{display:flex;gap:10px;flex-wrap:wrap}
+.set label{font-size:13px;color:var(--mute);display:flex;flex-direction:column;gap:3px}
+input,button,select{font:inherit;color:inherit}
+input{background:var(--bg);border:1.5px solid var(--line);border-radius:10px;padding:9px 11px;width:100%;min-width:0}
+input:focus-visible,button:focus-visible{outline:3px solid var(--lime);outline-offset:1px}
+.set input{width:130px}
+.card{background:var(--card);border-radius:22px;padding:20px;border:1.5px solid var(--line)}
+.main{display:grid;grid-template-columns:1.25fr 1fr;gap:16px}
+@media(max-width:820px){.main{grid-template-columns:1fr}}
+.hero{text-align:center;background:var(--hero);box-shadow:0 0 70px rgba(255,122,26,.10);border-color:#4a2c14}
+.hero h2{margin:0;font-size:22px;font-weight:800}
+.mood{color:var(--mute);margin:2px 0 4px}
+svg.stage{width:100%;max-width:420px;height:auto;display:block;margin:0 auto}
+#fig{transform-origin:200px 345px}
+#prog{transition:stroke .4s}
+.pills{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:6px}
+.pill{border-radius:16px;padding:10px 18px;background:var(--bg);min-width:130px}
+.pill b{display:block;font-size:28px;font-weight:800;line-height:1.1}
+.pill small{color:var(--mute);font-size:13px}
+.form h3,.sec h3{margin:0 0 12px;font-size:18px;font-weight:800}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.form label{font-size:13px;color:var(--mute);display:block}
+.form .full{grid-column:1/-1}
+.quick{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:12px}
+.quick button{border:1.5px solid var(--line);background:var(--bg);border-radius:99px;padding:6px 12px;font-size:13px;cursor:pointer}
+.quick button:hover{border-color:var(--lime);color:var(--lime)}
+.add{width:100%;margin-top:12px;background:var(--lime);color:#0a0a0a;border:0;border-radius:14px;padding:13px;font-weight:800;font-size:16px;cursor:pointer}
+.add:active{transform:scale(.98)}
+.note{font-size:12px;color:var(--mute);margin:8px 0 0}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:16px 0}
+@media(max-width:820px){.stats{grid-template-columns:repeat(2,1fr)}}
+.stat{border-radius:20px;padding:16px;background:var(--card);border:1.5px solid var(--line)}
+.stat b{display:block;font-size:clamp(22px,4vw,32px);font-weight:800;line-height:1.1}
+.stat span{font-size:13px;color:var(--mute)}
+.stat.big{background:var(--lime);color:#0a0a0a;border-color:var(--lime)}
+.stat.big span{color:#4a2000}
+.stat.yel{background:#241309;color:var(--lime);border-color:var(--lime)}
+.stat.yel span{color:var(--mute)}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.two.solo{grid-template-columns:1fr}
+.main.solo{grid-template-columns:minmax(0,560px);justify-content:center}
+[hidden]{display:none!important}
+@media(max-width:820px){.two{grid-template-columns:1fr}}
+.bars{display:flex;align-items:flex-end;gap:8px;height:170px;position:relative;padding-top:10px}
+.bar{flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;height:100%;font-size:12px;color:var(--mute);gap:4px}
+.bar i{display:block;width:100%;border-radius:8px 8px 3px 3px;background:var(--lime);min-height:3px;transition:height .6s}
+.bar i.over{background:var(--red)}
+.bar em{font-style:normal;color:var(--ink);font-weight:600;font-size:11px}
+.goal{position:absolute;left:0;right:0;border-top:2px dashed var(--mute);pointer-events:none}
+.goal span{position:absolute;right:0;top:-18px;font-size:11px;color:var(--mute);background:var(--card);padding:0 4px}
+.list{max-height:360px;overflow:auto}
+.row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)}
+.row:last-child{border:0}
+.row .t{flex:1;min-width:0}
+.row .t b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row .t small{color:var(--mute)}
+.row .n{text-align:right;font-weight:600;white-space:nowrap}
+.row .n small{display:block;color:var(--mute);font-weight:400}
+.x{border:0;background:transparent;color:var(--mute);font-size:20px;cursor:pointer;border-radius:8px;width:32px;height:32px}
+.x:hover{color:var(--red)}
+.empty{color:var(--mute);padding:16px 0;text-align:center}
+.empty button{margin-top:8px;border:1.5px solid var(--line);background:var(--bg);border-radius:99px;padding:7px 14px;cursor:pointer}
+.scroll{overflow-x:auto}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+
+.nav{display:flex;gap:8px;flex-wrap:wrap}
+.nav a{padding:8px 16px;border-radius:99px;border:1.5px solid var(--line);color:var(--ink);text-decoration:none;font-weight:600;font-size:14px}
+.nav a:hover{border-color:var(--lime);color:var(--lime)}
+.nav a.on{background:var(--lime);border-color:var(--lime);color:#0a0a0a}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>Smoke <span>break</span></h1>
+  <nav class="nav"><a href="index.html">Home</a><a href="food.html">Food</a><a href="smoking.html" class="on">Smoking</a><a href="gambling.html">Gambling</a></nav>
+</header>
+<p class="note" id="access" style="margin:-6px 0 14px">Loading…</p>
+
+<div class="main solo" id="main">
+  <section class="card hero">
+    <h2 id="hName"></h2>
+    <p class="mood" id="mood"></p>
+    <svg class="stage" viewBox="0 0 400 400" role="img" aria-label="Roommate with a cigarette and a ring showing today’s count">
+      <circle cx="200" cy="200" r="168" fill="none" stroke="var(--ring)" stroke-width="16"/>
+      <circle id="prog" cx="200" cy="200" r="168" fill="none" stroke="#ff7a1a" stroke-width="16" stroke-linecap="round" transform="rotate(-90 200 200)" stroke-dasharray="1055.6" stroke-dashoffset="1055.6"/>
+      <g id="fig">
+        <ellipse cx="200" cy="348" rx="62" ry="9" fill="#ff7a1a" opacity=".16"/>
+        <ellipse cx="181" cy="326" rx="19" ry="12" fill="#f3f6ee"/>
+        <ellipse cx="219" cy="326" rx="19" ry="12" fill="#f3f6ee"/>
+        <rect x="168" y="290" width="64" height="34" rx="12" fill="#2c2c2c"/>
+        <ellipse class="sh" cx="200" cy="248" rx="44" ry="58"/>
+        <ellipse class="sh" cx="152" cy="250" rx="11" ry="38" transform="rotate(10 152 250)"/>
+        <ellipse class="sh" cx="248" cy="250" rx="11" ry="38" transform="rotate(-10 248 250)"/>
+        <circle class="sk" cx="148" cy="284" r="10"/>
+        <circle class="sk" cx="252" cy="284" r="10"/>
+        <rect class="sk" x="190" y="196" width="20" height="18" rx="7"/>
+        <circle class="sk" cx="200" cy="152" r="44"/>
+        <path class="hr" d="M158 140 Q156 106 200 106 Q244 106 242 140 Q226 130 200 130 Q174 130 158 140Z"/>
+        <ellipse id="eL" cx="184" cy="154" rx="5" ry="7" fill="#0b0705"/>
+        <ellipse id="eR" cx="216" cy="154" rx="5" ry="7" fill="#0b0705"/>
+        <path id="mouth" d="M184 170 Q200 186 216 170" fill="none" stroke="#1a0d08" stroke-width="4" stroke-linecap="round"/>
+        <rect x="214" y="172" width="32" height="6" rx="2" fill="#f3f6ee"/>
+        <rect x="244" y="172" width="7" height="6" rx="2" fill="#ff6a2b"/>
+      </g>
+      <circle class="puff" cx="252" cy="166" r="4" fill="#cfd6c6" opacity="0"/>
+      <circle class="puff" cx="252" cy="166" r="4" fill="#cfd6c6" opacity="0"/>
+      <circle class="puff" cx="252" cy="166" r="4" fill="#cfd6c6" opacity="0"/>
+    </svg>
+    <div class="pills">
+      <div class="pill"><b id="tCal">0</b><small id="tGoal">cigarettes today</small></div>
+      <div class="pill"><b id="tSpend">$0.00</b><small>spent today</small></div>
+    </div>
+  </section>
+</div>
+
+<div class="stats" id="stats"></div>
+
+<div class="two" id="two">
+  <section class="card sec"><h3>Last 7 days</h3><div class="bars" id="bars"></div></section>
+  <section class="card sec"><h3>Log history</h3><div class="list" id="list"></div></section>
+</div>
+</div>
+
+<script>
+// ---- Settings: edit these ----
+const CONFIG={
+  name:'Dylan',          // his name or nickname
+  dailyLimit:5,            // cigarettes per day for the ring
+  packPrice:5,             // dollars per pack
+  packSize:20,              // cigarettes per pack
+  skin:'#b98458', shirt:'#f3f6ee', hair:'#120d0b',   // colors for the character (change to adjust)
+  csvUrl:'https://docs.google.com/spreadsheets/d/e/2PACX-1vQo6KM3GmWnuKpDxqdtNeaLM2aZyxn6rR9GFHXU0_U_Ung_QcJfN9VfEI16QoiP__mCIuoNjtR62Dmi/pub?gid=1137863080&single=true&output=csv', // Google Sheet tab > Publish to web > CSV
+  refreshMinutes:5
+};
+let S={logs:[]};
+
+const $=id=>document.getElementById(id);
+const pad=n=>String(n).padStart(2,'0');
+const ds=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+const today=()=>ds(new Date());
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const money=n=>'$'+n.toFixed(2),num=n=>Math.round(n).toLocaleString(),sum=(a,k)=>a.reduce((s,m)=>s+m[k],0);
+const nice=d=>{const [y,m,day]=d.split('-').map(Number);return new Date(y,m-1,day).toLocaleDateString(undefined,{month:'short',day:'numeric'})};
+
+function parseCSV(t){const rows=[];let r=[],c='',q=false;
+  for(let i=0;i<t.length;i++){const ch=t[i];
+    if(q){if(ch==='"'){if(t[i+1]==='"'){c+='"';i++}else q=false}else c+=ch}
+    else if(ch==='"')q=true;
+    else if(ch===','){r.push(c);c=''}
+    else if(ch==='\n'||ch==='\r'){if(ch==='\r'&&t[i+1]==='\n')i++;r.push(c);rows.push(r);r=[];c=''}
+    else c+=ch}
+  if(c||r.length){r.push(c);rows.push(r)}return rows}
+function normDate(v){v=(v||'').trim();let m;
+  if(m=v.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/))return m[1]+'-'+pad(+m[2])+'-'+pad(+m[3]);
+  if(m=v.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/))return m[3]+'-'+pad(+m[1])+'-'+pad(+m[2]);
+  const d=new Date(v);return isNaN(d)?'':ds(d)}
+const numv=v=>parseFloat(String(v||'').replace(/[$,\s]/g,''))||0;
+function fromCSV(text){
+  const rows=parseCSV(text).filter(r=>r.some(x=>x.trim()));
+  const h=(rows.shift()||[]).map(x=>x.trim().toLowerCase());
+  const [iD,iN,iNo,iC]=['date','count','note','cost'].map(k=>h.indexOf(k));
+  return rows.map((r,n)=>{const c=numv(r[iN]),raw=iC<0?'':(r[iC]||'').trim();
+    return{id:n,date:normDate(r[iD]),count:c,note:iNo<0?'':(r[iNo]||'').trim(),cost:raw?numv(raw):c*CONFIG.packPrice/CONFIG.packSize}}).filter(l=>l.date&&l.count>0)}
+function sample(){const out=[],cs=[6,9,12,4,8,11,7];
+  for(let i=0;i<7;i++){const x=new Date();x.setDate(x.getDate()-i);out.push({id:out.length,date:ds(x),count:cs[i],note:i%3?'':'Long day',cost:cs[i]*CONFIG.packPrice/CONFIG.packSize})}
+  return out}
+
+// ---- Tween engine ----
+const RM=matchMedia('(prefers-reduced-motion:reduce)').matches;
+const ease={outCubic:t=>1-Math.pow(1-t,3)};
+const cur={ring:0,cnt:0,spend:0,sick:0},raf={};
+let breath=0,smoke=0,eyeBase=7,nextBlink=2500,blinkStart=-1,mraf,mc=[184,170,200,186,216,170];
+const rgb=h=>[1,3,5].map(i=>parseInt(h.slice(i,i+2),16));
+const mix=(a,b,t)=>'rgb('+a.map((v,i)=>Math.round(v+(b[i]-v)*t)).join(',')+')';
+const SK=[...document.querySelectorAll('.sk')],SH=[...document.querySelectorAll('.sh')],HR=[...document.querySelectorAll('.hr')],PF=[...document.querySelectorAll('.puff')];
+SH.forEach(e=>e.style.fill=CONFIG.shirt);HR.forEach(e=>e.style.fill=CONFIG.hair);
+function apply(){
+  $('prog').style.strokeDashoffset=1055.6*(1-cur.ring);
+  $('tCal').textContent=num(cur.cnt);$('tSpend').textContent=money(cur.spend);
+  const c=mix(rgb(CONFIG.skin),[150,190,120],cur.sick*0.7);SK.forEach(e=>e.style.fill=c);
+  $('fig').style.transform=`scale(${(1+0.012*breath).toFixed(4)},${(1-0.02*breath).toFixed(4)})`;
+}
+function tweenTo(k,to,ms,fn){
+  cancelAnimationFrame(raf[k]);const from=cur[k],t0=performance.now(),d=RM?1:ms;
+  (function step(now){const p=Math.min((now-t0)/d,1);cur[k]=from+(to-from)*fn(p);apply();if(p<1)raf[k]=requestAnimationFrame(step)})(t0);
+}
+const MN=[[184,170,200,186,216,170],[186,172,200,180,214,172],[186,176,200,176,214,176],[184,180,200,166,216,180]];
+function moveMouth(i){
+  cancelAnimationFrame(mraf);const f=mc.slice(),to=MN[i],t0=performance.now();
+  (function s(now){const p=Math.min((now-t0)/(RM?1:500),1),e=ease.outCubic(p);
+    mc=f.map((v,k)=>v+(to[k]-v)*e);
+    $('mouth').setAttribute('d',`M${mc[0]} ${mc[1]} Q${mc[2]} ${mc[3]} ${mc[4]} ${mc[5]}`);
+    if(p<1)mraf=requestAnimationFrame(s)})(t0);
+}
+function idle(t){
+  let k=1;
+  if(!RM){
+    breath=Math.sin(t/650);
+    if(blinkStart<0&&t>nextBlink)blinkStart=t;
+    if(blinkStart>=0){const p=(t-blinkStart)/170;if(p>=1){blinkStart=-1;nextBlink=t+2500+Math.random()*3000}else k=1-0.9*Math.sin(Math.PI*p)}
+    PF.forEach((p,i)=>{const ph=((t/2600)+i/3)%1;
+      p.setAttribute('cx',(252+ph*22+Math.sin(ph*7+i*2)*7).toFixed(1));
+      p.setAttribute('cy',(166-ph*80).toFixed(1));
+      p.setAttribute('r',(3+ph*11).toFixed(1));
+      p.setAttribute('opacity',((1-ph)*0.55*(0.25+smoke)).toFixed(2))});
+  }
+  const ry=(eyeBase*k).toFixed(2);$('eL').setAttribute('ry',ry);$('eR').setAttribute('ry',ry);
+  apply();requestAnimationFrame(idle);
+}
+requestAnimationFrame(idle);
+
+function mood(r){
+  if(r<.01)return['No smoke breaks yet.',0];
+  if(r<.5)return['Casual start.',0];
+  if(r<.9)return['Warming up.',1];
+  if(r<1.15)return['Right at the daily limit.',2];
+  if(r<1.6)return['Over the limit.',2];
+  return['Chain mode.',3];
+}
+function render(){
+  const t=today(),all=S.logs,lim=CONFIG.dailyLimit;
+  const td=all.filter(l=>l.date===t),cnt=sum(td,'count'),sp=sum(td,'cost'),r=cnt/lim;
+  $('hName').textContent=CONFIG.name;
+  const [mt,mi]=mood(r);$('mood').textContent=mt;
+  tweenTo('ring',Math.min(r,1),900,ease.outCubic);tweenTo('cnt',cnt,900,ease.outCubic);tweenTo('spend',sp,900,ease.outCubic);
+  tweenTo('sick',Math.min(Math.max(r-1,0),1),1200,ease.outCubic);
+  smoke=Math.min(r,1.5)/1.5;moveMouth(mi);eyeBase=r>=1.6?3:7;
+  $('prog').style.stroke=r>1.15?'#ff4d4d':r>.9?'#ffb703':'#ff7a1a';
+  $('tGoal').textContent=`of ${num(lim)} cigarettes today`;
+
+  const days=[...new Set(all.map(l=>l.date))];
+  const tc=sum(all,'count'),ts=sum(all,'cost');
+  const wk=[];for(let i=6;i>=0;i--){const x=new Date();x.setDate(x.getDate()-i);const k=ds(x);wk.push({l:x.toLocaleDateString(undefined,{weekday:'short'}),c:sum(all.filter(l=>l.date===k),'count')})}
+  const w7=wk.reduce((s,w)=>s+w.c,0);
+  const big=days.length?Math.max(...days.map(d=>sum(all.filter(l=>l.date===d),'count'))):0;
+  $('stats').innerHTML=`
+   <div class="stat big"><b>${num(tc)}</b><span>All-time cigarettes</span></div>
+   <div class="stat yel"><b>${money(ts)}</b><span>All-time spend</span></div>
+   <div class="stat"><b>${(tc/CONFIG.packSize).toFixed(1)}</b><span>Packs smoked</span></div>
+   <div class="stat"><b>${days.length}</b><span>Days tracked</span></div>
+   <div class="stat"><b>${days.length?(tc/days.length).toFixed(1):0}</b><span>Average per day</span></div>
+   <div class="stat"><b>${days.length?money(ts/days.length):'$0.00'}</b><span>Average spend per day</span></div>
+   <div class="stat"><b>${num(big)}</b><span>Biggest day</span></div>
+   <div class="stat"><b>${num(w7)}</b><span>Last 7 days</span></div>`;
+
+  const mx=Math.max(lim*1.4,...wk.map(w=>w.c));
+  $('bars').innerHTML=`<div class="goal" style="bottom:calc(${(lim/mx*100).toFixed(1)}% * .78 + 22px)"><span>limit</span></div>`+
+    wk.map(w=>`<div class="bar"><em>${w.c?num(w.c):''}</em><i class="${w.c>lim?'over':''}" style="height:${(w.c/mx*78).toFixed(1)}%"></i>${w.l}</div>`).join('');
+
+  const L=[...all].sort((a,b)=>b.date.localeCompare(a.date)||b.id-a.id);
+  $('list').innerHTML=L.length?L.map(l=>`<div class="row"><div class="t"><b>${num(l.count)} cigarette${l.count===1?'':'s'}</b><small>${esc(l.note||'Logged')} · ${nice(l.date)}</small></div><div class="n">${money(l.cost)}</div></div>`).join(''):`<div class="empty">Nothing logged yet.</div>`;
+}
+const status=t=>{$('access').textContent=t};
+async function load(){
+  if(!CONFIG.csvUrl||CONFIG.csvUrl.startsWith('PASTE')){S.logs=sample();status('Showing sample data. Paste your published sheet link into CONFIG to use real data.');render();return}
+  try{
+    const res=await fetch(CONFIG.csvUrl+(CONFIG.csvUrl.includes('?')?'&':'?')+'t='+Date.now());
+    if(!res.ok)throw 0;
+    S.logs=fromCSV(await res.text());
+    status('Updated '+new Date().toLocaleTimeString([],{hour:'numeric',minute:'2-digit'})+'. New entries can take a few minutes to appear.');
+  }catch(e){status('Couldn’t load the sheet. Check that it is published to the web as CSV.')}
+  render()}
+load();setInterval(load,CONFIG.refreshMinutes*60000);
+</script>
+</body>
+</html>
