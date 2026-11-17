@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Roommate Fast Food Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root{color-scheme:dark;--bg:#050505;--card:#101010;--ink:#f3f6ee;--mute:#98a28d;--line:#262b22;--lime:#b6ff00;--red:#ff4d4d;--yel:#ffb703;--grn:#b6ff00;--ring:#1d2218;--hero:#0b0b0b;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Bricolage Grotesque",system-ui,-apple-system,"Segoe UI",sans-serif;line-height:1.45}
+.wrap{max-width:1080px;margin:0 auto;padding:20px 16px 48px}
+header{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;margin-bottom:18px}
+h1{font-size:clamp(26px,5vw,40px);font-weight:800;letter-spacing:-.02em;margin:0;line-height:1.05}
+h1 span{color:var(--lime)}
+.set{display:flex;gap:10px;flex-wrap:wrap}
+.set label{font-size:13px;color:var(--mute);display:flex;flex-direction:column;gap:3px}
+input,button,select{font:inherit;color:inherit}
+input{background:var(--bg);border:1.5px solid var(--line);border-radius:10px;padding:9px 11px;width:100%;min-width:0}
+input:focus-visible,button:focus-visible{outline:3px solid var(--lime);outline-offset:1px}
+.set input{width:130px}
+.card{background:var(--card);border-radius:22px;padding:20px;border:1.5px solid var(--line)}
+.main{display:grid;grid-template-columns:1.25fr 1fr;gap:16px}
+@media(max-width:820px){.main{grid-template-columns:1fr}}
+.hero{text-align:center;background:var(--hero);box-shadow:0 0 70px rgba(182,255,0,.08);border-color:#2f3a1c}
+.hero h2{margin:0;font-size:22px;font-weight:800}
+.mood{color:var(--mute);margin:2px 0 4px}
+svg.stage{width:100%;max-width:420px;height:auto;display:block;margin:0 auto}
+#fig{transform-origin:200px 345px;transition:transform .9s cubic-bezier(.3,1.5,.5,1)}
+#prog{transition:stroke-dashoffset .9s ease,stroke .4s}
+.pills{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:6px}
+.pill{border-radius:16px;padding:10px 18px;background:var(--bg);min-width:130px}
+.pill b{display:block;font-size:28px;font-weight:800;line-height:1.1}
+.pill small{color:var(--mute);font-size:13px}
+.form h3,.sec h3{margin:0 0 12px;font-size:18px;font-weight:800}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.form label{font-size:13px;color:var(--mute);display:block}
+.form .full{grid-column:1/-1}
+.quick{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:12px}
+.quick button{border:1.5px solid var(--line);background:var(--bg);border-radius:99px;padding:6px 12px;font-size:13px;cursor:pointer}
+.quick button:hover{border-color:var(--lime);color:var(--lime)}
+.add{width:100%;margin-top:12px;background:var(--lime);color:#0a0a0a;border:0;border-radius:14px;padding:13px;font-weight:800;font-size:16px;cursor:pointer}
+.add:active{transform:scale(.98)}
+.note{font-size:12px;color:var(--mute);margin:8px 0 0}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:16px 0}
+@media(max-width:820px){.stats{grid-template-columns:repeat(2,1fr)}}
+.stat{border-radius:20px;padding:16px;background:var(--card);border:1.5px solid var(--line)}
+.stat b{display:block;font-size:clamp(22px,4vw,32px);font-weight:800;line-height:1.1}
+.stat span{font-size:13px;color:var(--mute)}
+.stat.big{background:var(--lime);color:#0a0a0a;border-color:var(--lime)}
+.stat.big span{color:#2e4400}
+.stat.yel{background:#141b08;color:var(--lime);border-color:var(--lime)}
+.stat.yel span{color:var(--mute)}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.two.solo{grid-template-columns:1fr}
+.main.solo{grid-template-columns:minmax(0,560px);justify-content:center}
+[hidden]{display:none!important}
+@media(max-width:820px){.two{grid-template-columns:1fr}}
+.bars{display:flex;align-items:flex-end;gap:8px;height:170px;position:relative;padding-top:10px}
+.bar{flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;height:100%;font-size:12px;color:var(--mute);gap:4px}
+.bar i{display:block;width:100%;border-radius:8px 8px 3px 3px;background:var(--lime);min-height:3px;transition:height .6s}
+.bar i.over{background:var(--red)}
+.bar em{font-style:normal;color:var(--ink);font-weight:600;font-size:11px}
+.goal{position:absolute;left:0;right:0;border-top:2px dashed var(--mute);pointer-events:none}
+.goal span{position:absolute;right:0;top:-18px;font-size:11px;color:var(--mute);background:var(--card);padding:0 4px}
+.list{max-height:360px;overflow:auto}
+.row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)}
+.row:last-child{border:0}
+.row .t{flex:1;min-width:0}
+.row .t b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row .t small{color:var(--mute)}
+.row .n{text-align:right;font-weight:600;white-space:nowrap}
+.row .n small{display:block;color:var(--mute);font-weight:400}
+.x{border:0;background:transparent;color:var(--mute);font-size:20px;cursor:pointer;border-radius:8px;width:32px;height:32px}
+.x:hover{color:var(--red)}
+.empty{color:var(--mute);padding:16px 0;text-align:center}
+.empty button{margin-top:8px;border:1.5px solid var(--line);background:var(--bg);border-radius:99px;padding:7px 14px;cursor:pointer}
+.scroll{overflow-x:auto}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>Fast food <span>watch</span></h1>
+  </header>
+<p class="note" id="access" style="margin:-6px 0 14px">Loading…</p>
+
+<div class="main solo" id="main">
+  <section class="card hero">
+    <h2 id="hName"></h2>
+    <p class="mood" id="mood"></p>
+    <svg class="stage" viewBox="0 0 400 400" role="img" aria-label="Roommate growing with today’s calories">
+      <circle cx="200" cy="200" r="168" fill="none" stroke="var(--ring)" stroke-width="16"/>
+      <circle id="prog" cx="200" cy="200" r="168" fill="none" stroke="#b6ff00" stroke-width="16" stroke-linecap="round" transform="rotate(-90 200 200)" stroke-dasharray="1055.6" stroke-dashoffset="1055.6"/>
+      <g id="fig">
+        <ellipse cx="200" cy="348" rx="80" ry="10" fill="#b6ff00" opacity=".16"/>
+        <ellipse cx="172" cy="326" rx="24" ry="14" fill="#f3f6ee"/>
+        <ellipse cx="228" cy="326" rx="24" ry="14" fill="#f3f6ee"/>
+        <rect x="156" y="290" width="88" height="34" rx="14" fill="#2c2c2c"/>
+        <ellipse cx="200" cy="248" rx="60" ry="58" fill="#b6ff00"/>
+        <ellipse cx="136" cy="250" rx="15" ry="38" fill="#b6ff00" transform="rotate(14 136 250)"/>
+        <ellipse cx="264" cy="250" rx="15" ry="38" fill="#b6ff00" transform="rotate(-14 264 250)"/>
+        <circle cx="130" cy="286" r="13" fill="#8a5a3c"/>
+        <circle cx="270" cy="286" r="13" fill="#8a5a3c"/>
+        <rect x="186" y="196" width="28" height="18" rx="8" fill="#7a4d31"/>
+        <circle cx="200" cy="152" r="44" fill="#8a5a3c"/>
+        <path d="M158 140 Q156 106 200 106 Q244 106 242 140 Q226 130 200 130 Q174 130 158 140Z" fill="#120c0a"/>
+        <ellipse id="eL" cx="184" cy="154" rx="5" ry="7" fill="#0b0705"/>
+        <ellipse id="eR" cx="216" cy="154" rx="5" ry="7" fill="#0b0705"/>
+        <circle id="cL" cx="170" cy="168" r="7" fill="#d98a5e" opacity=".35"/>
+        <circle id="cR" cx="230" cy="168" r="7" fill="#d98a5e" opacity=".35"/>
+        <path id="mouth" d="M184 170 Q200 184 216 170" fill="none" stroke="#1a0d08" stroke-width="4" stroke-linecap="round"/>
+      </g>
+    </svg>
+    <div class="pills">
+      <div class="pill"><b id="tCal">0</b><small id="tGoal">calories today</small></div>
+      <div class="pill"><b id="tSpend">$0.00</b><small>spent today</small></div>
+    </div>
+  </section>
+
+  </div>
+
+<div class="stats" id="stats"></div>
+
+<div class="two solo" id="two">
+  <section class="card sec"><h3>Last 7 days</h3><div class="bars" id="bars"></div></section>
+  </div>
+</div>
+
+<script>
+// ---- Settings: edit these ----
+const CONFIG={
+  name:'David',
+  goal:2000,                                // daily calorie goal
+  csvUrl:'https://docs.google.com/spreadsheets/d/e/2PACX-1vQo6KM3GmWnuKpDxqdtNeaLM2aZyxn6rR9GFHXU0_U_Ung_QcJfN9VfEI16QoiP__mCIuoNjtR62Dmi/pub?gid=1818132855&single=true&output=csv', // Google Sheet > File > Share > Publish to web > CSV
+  refreshMinutes:5
+};
+let S={name:CONFIG.name,goal:CONFIG.goal,meals:[]};
+const $=id=>document.getElementById(id);
+const pad=n=>String(n).padStart(2,'0');
+const ds=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+const today=()=>ds(new Date());
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const money=n=>'$'+n.toFixed(2);
+const num=n=>Math.round(n).toLocaleString();
+const sum=(a,k)=>a.reduce((s,m)=>s+m[k],0);
+const nice=d=>{const [y,m,day]=d.split('-').map(Number);return new Date(y,m-1,day).toLocaleDateString(undefined,{month:'short',day:'numeric'})};
+
+const MOUTH=['M184 170 Q200 186 216 170','M186 172 Q200 180 214 172','M186 176 L214 176','M184 180 Q200 166 216 180'];
+function mood(r){
+  if(r<.05)return['Hungry, but dignified.',0];
+  if(r<.5)return['Just getting started.',0];
+  if(r<.9)return['Nicely fueled.',1];
+  if(r<1.15)return['Right at the goal.',2];
+  if(r<1.6)return['Over the goal and still smiling.',2];
+  return['Full food coma.',3];
+}
+
+function render(){
+  const t=today(),goal=S.goal,all=S.meals;
+  const td=all.filter(m=>m.date===t),cal=sum(td,'cal'),sp=sum(td,'price'),r=cal/goal;
+  $('hName').textContent=S.name;
+  const [mt,mi]=mood(r);$('mood').textContent=mt;
+  const g=Math.min(r,2.5);
+  $('fig').style.transform=`scale(${(0.72+0.42*g).toFixed(3)},${(0.88+0.16*g).toFixed(3)})`;
+  $('prog').style.strokeDashoffset=1055.6*(1-Math.min(r,1));
+  $('prog').style.stroke=r>1.15?'#ff4d4d':r>.9?'#ffb703':'#b6ff00';
+  $('mouth').setAttribute('d',MOUTH[mi]);
+  const sleepy=r>=1.6;$('eL').setAttribute('ry',sleepy?2:7);$('eR').setAttribute('ry',sleepy?2:7);
+  $('tCal').textContent=num(cal);$('tGoal').textContent=`of ${num(goal)} calories today`;$('tSpend').textContent=money(sp);
+
+  const days=[...new Set(all.map(m=>m.date))],spots={};
+  all.forEach(m=>{spots[m.spot]=(spots[m.spot]||0)+1});
+  const fave=Object.entries(spots).sort((a,b)=>b[1]-a[1])[0];
+  const tc=sum(all,'cal'),ts=sum(all,'price');
+  $('stats').innerHTML=`
+   <div class="stat big"><b>${num(tc)}</b><span>All-time calories</span></div>
+   <div class="stat yel"><b>${money(ts)}</b><span>All-time fast food spend</span></div>
+   <div class="stat"><b>${all.length}</b><span>Meals logged${days.length?` over ${days.length} day${days.length>1?'s':''}`:''}</span></div>
+   <div class="stat"><b>${days.length?num(tc/days.length):0}</b><span>Average calories per day</span></div>
+   <div class="stat"><b>${days.length?money(ts/days.length):'$0.00'}</b><span>Average spend per day</span></div>
+   <div class="stat"><b>${all.length?money(ts/all.length):'$0.00'}</b><span>Average cost per meal</span></div>
+   <div class="stat"><b>${fave?esc(fave[0]):'None yet'}</b><span>${fave?`Favorite spot (${fave[1]} visits)`:'Favorite spot'}</span></div>
+   <div class="stat"><b>${days.length?num(Math.max(...days.map(d=>sum(all.filter(m=>m.date===d),'cal')))):0}</b><span>Biggest day (calories)</span></div>`;
+
+  const wk=[];for(let i=6;i>=0;i--){const x=new Date();x.setDate(x.getDate()-i);const k=ds(x);wk.push({l:x.toLocaleDateString(undefined,{weekday:'short'}),c:sum(all.filter(m=>m.date===k),'cal')})}
+  const mx=Math.max(goal*1.4,...wk.map(w=>w.c));
+  $('bars').innerHTML=`<div class="goal" style="bottom:calc(${(goal/mx*100).toFixed(1)}% * .78 + 22px)"><span>goal</span></div>`+
+    wk.map(w=>`<div class="bar"><em>${w.c?num(w.c):''}</em><i class="${w.c>goal?'over':''}" style="height:${(w.c/mx*78).toFixed(1)}%"></i>${w.l}</div>`).join('');
+
+}
+
+function parseCSV(t){const rows=[];let r=[],c='',q=false;
+  for(let i=0;i<t.length;i++){const ch=t[i];
+    if(q){if(ch==='"'){if(t[i+1]==='"'){c+='"';i++}else q=false}else c+=ch}
+    else if(ch==='"')q=true;
+    else if(ch===','){r.push(c);c=''}
+    else if(ch==='\n'||ch==='\r'){if(ch==='\r'&&t[i+1]==='\n')i++;r.push(c);rows.push(r);r=[];c=''}
+    else c+=ch}
+  if(c||r.length){r.push(c);rows.push(r)}return rows}
+function normDate(v){v=(v||'').trim();let m;
+  if(m=v.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/))return m[1]+'-'+pad(+m[2])+'-'+pad(+m[3]);
+  if(m=v.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/))return m[3]+'-'+pad(+m[1])+'-'+pad(+m[2]);
+  const d=new Date(v);return isNaN(d)?'':ds(d)}
+const numv=v=>parseFloat(String(v||'').replace(/[$,\s]/g,''))||0;
+function fromCSV(text){
+  const rows=parseCSV(text).filter(r=>r.some(x=>x.trim()));
+  const h=(rows.shift()||[]).map(x=>x.trim().toLowerCase());
+  const ix=k=>h.indexOf(k);
+  const [iD,iR,iI,iC,iP]=['date','restaurant','item','calories','price'].map(ix);
+  return rows.map((r,n)=>({id:n,date:normDate(r[iD]),spot:(r[iR]||'').trim()||'Unknown',item:(r[iI]||'').trim(),cal:numv(r[iC]),price:numv(r[iP])})).filter(m=>m.date&&m.cal>0)}
+function sample(){const out=[],spots=[['McDonald\u2019s','Big Mac meal',1090,10.5],['Taco Bell','Crunchwrap combo',1000,10],['Wendy\u2019s','Baconator combo',1500,12.5],['Chick-fil-A','Spicy sandwich meal',1100,11],['Popeyes','Tenders combo',1150,11]];
+  for(let i=0;i<7;i++){const x=new Date();x.setDate(x.getDate()-i);for(let j=0;j<1+i%3;j++){const p=spots[(i+j*2)%5];out.push({id:out.length,date:ds(x),spot:p[0],item:p[1],cal:p[2],price:p[3]})}}
+  return out}
+const status=t=>{$('access').textContent=t};
+async function load(){
+  if(!CONFIG.csvUrl||CONFIG.csvUrl.startsWith('PASTE')){S.meals=sample();status('Showing sample data. Paste your published sheet link into CONFIG to use real data.');render();return}
+  try{
+    const res=await fetch(CONFIG.csvUrl+(CONFIG.csvUrl.includes('?')?'&':'?')+'t='+Date.now());
+    if(!res.ok)throw 0;
+    S.meals=fromCSV(await res.text());
+    status('Updated '+new Date().toLocaleTimeString([],{hour:'numeric',minute:'2-digit'})+'. New meals can take a few minutes to appear.');
+  }catch(e){status('Couldn\u2019t load the sheet. Check that it is published to the web as CSV.')}
+  render()}
+load();setInterval(load,CONFIG.refreshMinutes*60000);
+</script>
+</body>
+</html>
